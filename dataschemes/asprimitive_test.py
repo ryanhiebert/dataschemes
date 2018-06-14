@@ -1,4 +1,5 @@
-from .asprimitive import asprimitive, UnserializableValueError, UnrecognizedTypeError
+from .converter import UnserializableValueError
+from .asprimitive import asprimitive, UnrecognizedTypeError
 
 import pytest
 
