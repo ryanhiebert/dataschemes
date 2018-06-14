@@ -1,0 +1,18 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+dataclasses = "*"
+
+[dev-packages]
+black = "==18.6b2"
+pytest = "*"
+pytest-xdist = "*"
+coverage = "*"
+pytest-cov = "*"
+pylint = "*"
+
+[requires]
+python_version = "3.6"
