@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from typing import Set, TypeVar, Union
+from typing import Set, TypeVar, Union, Tuple, Callable, Dict
 
 
 def converters(method):
@@ -35,14 +35,30 @@ class Converter(metaclass=ABCMeta):
         raise NotImplementedError
 
 
-class StrConverter(Converter):
+class AtomConverter(Converter):
+    """The common elements between atom converters."""
+
+    type: type
+    options: Dict[type, Tuple[Callable[[object], object], Callable[[object], object]]]
+
+    def asprimitive(self, value: object, types: Set[type] = None) -> object:
+        preferred = next(iter(self.options.items()))
+        _, (converter, _) = preferred
+        if types is None:
+            return converter(value)
+
+        for type_, (converter, _) in self.options.items():
+            if type_ in types:
+                return converter(value)
+
+        raise UnserializableValueError(f"Could not convert {self.type} to a primitive.")
+
+
+class StrConverter(AtomConverter):
     """Convert the str built-in type."""
 
-    def asprimitive(self, value: str, types: Set[type] = None) -> str:
-        if types is None or str in types:
-            return value
-        else:
-            raise UnserializableValueError(f"Could not convert str to a primitive.")
+    type: str
+    options = {str: (str, str)}
 
     def asnative(self, value: object, types: Set[type] = None) -> str:
         if types is None:
@@ -60,20 +76,11 @@ class StrConverter(Converter):
             )
 
 
-class IntConverter(Converter):
+class IntConverter(AtomConverter):
     """Convert the int built-in type."""
 
-    def asprimitive(
-        self, value: int, types: Set[type] = None
-    ) -> Union[int, float, str]:
-        if types is None or int in types:
-            return value
-        elif float in types:
-            return float(value)
-        elif str in types:
-            return str(value)
-        else:
-            raise UnserializableValueError("Could not convert int to a primitive.")
+    type: int
+    options = {int: (int, int), float: (float, int), str: (str, int)}
 
     def asnative(self, value: object, types: Set[type] = None) -> int:
         if types is None:
@@ -105,16 +112,11 @@ class IntConverter(Converter):
             )
 
 
-class FloatConverter(Converter):
+class FloatConverter(AtomConverter):
     """Convert the float built-in type."""
 
-    def asprimitive(self, value: float, types: Set[type] = None) -> Union[float, str]:
-        if types is None or float in types:
-            return value
-        elif str in types:
-            return str(value)
-        else:
-            raise UnserializableValueError("Could not convert int to a primitive.")
+    type: float
+    options: {float: (float, float), str: (str, float)}
 
     def asnative(self, value: object, types: Set[type] = None) -> float:
         if types is None:
