@@ -1,9 +1,5 @@
-from .asnative import (
-    asnative,
-    PrimitiveMismatchError,
-    UnknownPrimitiveError,
-    NativeTypeError,
-)
+from .converter import PrimitiveMismatchError, UnknownPrimitiveError
+from .asnative import asnative, NativeTypeError
 
 import pytest
 

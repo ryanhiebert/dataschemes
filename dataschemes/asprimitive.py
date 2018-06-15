@@ -1,9 +1,5 @@
 from typing import Set
-from abc import ABCMeta, abstractmethod
-
-
-class UnserializableValueError(ValueError):
-    """The primitive types are not able to serialize this value."""
+from .converter import converters
 
 
 class UnrecognizedTypeError(TypeError):
@@ -20,29 +16,13 @@ def asprimitive(value: object, types: Set[type] = None) -> object:
     an optional argument. If the types are not specified, then it
     will make it whatever the type prefers.
     """
-    if isinstance(value, str):
-        if types is None or str in types:
-            return value
-        else:
-            raise UnserializableValueError("Could not convert str to a primitive.")
+    for type_, converter in converters("asprimitive").items():
+        if isinstance(value, type_):
+            # In order to allow for single argument converters, only call
+            # the converter with types if asprimitive was called with types.
+            if types is None:
+                return converter(value)
+            else:
+                return converter(value, types)
 
-    elif isinstance(value, int):
-        if types is None or int in types:
-            return value
-        elif float in types:
-            return float(value)
-        elif str in types:
-            return str(value)
-        else:
-            raise UnserializableValueError("Could not convert int to a primitive.")
-
-    elif isinstance(value, float):
-        if types is None or float in types:
-            return value
-        elif str in types:
-            return str(value)
-        else:
-            raise UnserializableValueError("Could not convert float to a primitive.")
-
-    else:
-        raise UnrecognizedTypeError("Type cannot be converted to a primitive.")
+    raise UnrecognizedTypeError("Type cannot be converted to a primitive.")
