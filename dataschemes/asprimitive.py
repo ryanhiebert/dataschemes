@@ -1,5 +1,4 @@
 from typing import Set
-from abc import ABCMeta, abstractmethod
 from .converter import converters
 
 

@@ -1,12 +1,5 @@
 from typing import Set, TypeVar
-
-
-class PrimitiveMismatchError(TypeError):
-    """Type does not match what would have been serialized."""
-
-
-class UnknownPrimitiveError(TypeError):
-    """Primitive type cannot be converted to this native type."""
+from .converter import converters
 
 
 class NativeTypeError(TypeError):
@@ -31,73 +24,13 @@ def asnative(cls: T, value: object, types: Set[type] = None) -> T:
     as a ``str``, even if it would convert correctly, because ``int``
     may not be sufficient to interpret all possible values.
     """
-    if issubclass(cls, str):
-        if types is None:
-            return str(value)
-        elif str in types:
-            if isinstance(value, str):
-                return value
+    for type_, converter in converters(asprimitive=False).items():
+        if issubclass(cls, type_):
+            # In order to allow for single argument converters, only call
+            # the converter with types if asnative was called with types.
+            if types is None:
+                return converter(value)
             else:
-                raise PrimitiveMismatchError(
-                    "Type does not match what would have been serialized."
-                )
-        else:
-            raise UnknownPrimitiveError(
-                "Primitive type cannot be converted to this native type."
-            )
+                return converter(value, types)
 
-    elif issubclass(cls, int):
-        if types is None:
-            return int(value)
-        elif int in types:
-            if isinstance(value, int):
-                return value
-            else:
-                raise PrimitiveMismatchError(
-                    "Type does not match what would have been serialized."
-                )
-        elif float in types:
-            if isinstance(value, float):
-                return int(value)
-            else:
-                raise PrimitiveMismatchError(
-                    "Type does not match what would have been serialized."
-                )
-        elif str in types:
-            if isinstance(value, str):
-                return int(value)
-            else:
-                raise PrimitiveMismatchError(
-                    "Type does not match what would have been serialized."
-                )
-        else:
-            raise UnknownPrimitiveError(
-                "Primitive type cannot be converted to this native type."
-            )
-
-    elif issubclass(cls, float):
-        if types is None:
-            return float(value)
-        elif float in types:
-            if isinstance(value, float):
-                return value
-            else:
-                raise PrimitiveMismatchError(
-                    "Type does not match what would have been serialized."
-                )
-        elif str in types:
-            if isinstance(value, str):
-                return float(value)
-            else:
-                raise PrimitiveMismatchError(
-                    "Type does not match what would have been serialized."
-                )
-        else:
-            raise UnknownPrimitiveError(
-                "Primitive type cannot be converted to this native type."
-            )
-
-    else:
-        raise NativeTypeError(
-            "Type is unable to be constructed from a serialized value."
-        )
+    raise NativeTypeError("Type is unable to be constructed from a serialized value.")

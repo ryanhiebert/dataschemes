@@ -17,6 +17,14 @@ class UnserializableValueError(ValueError):
     """The primitive types are not able to serialize this value."""
 
 
+class PrimitiveMismatchError(TypeError):
+    """Type does not match what would have been serialized."""
+
+
+class UnknownPrimitiveError(TypeError):
+    """Primitive type cannot be converted to this native type."""
+
+
 T = TypeVar("T")
 
 
@@ -46,8 +54,20 @@ class StrConverter(Converter):
         else:
             raise UnserializableValueError(f"Could not convert str to a primitive.")
 
-    def __asnative__(self, cls, value, types):
-        raise NotImplementedError
+    def __asnative__(self, value: object, types: Set[type] = None) -> str:
+        if types is None:
+            return str(value)
+        elif str in types:
+            if isinstance(value, str):
+                return value
+            else:
+                raise PrimitiveMismatchError(
+                    "Type does not match what would have been serialized."
+                )
+        else:
+            raise UnknownPrimitiveError(
+                "Primitive type cannot be converted to this native type."
+            )
 
 
 class IntConverter(Converter):
@@ -65,8 +85,34 @@ class IntConverter(Converter):
         else:
             raise UnserializableValueError("Could not convert int to a primitive.")
 
-    def __asnative__(self, cls, value, types):
-        raise NotImplementedError
+    def __asnative__(self, value: object, types: Set[type] = None) -> int:
+        if types is None:
+            return int(value)
+        elif int in types:
+            if isinstance(value, int):
+                return value
+            else:
+                raise PrimitiveMismatchError(
+                    "Type does not match what would have been serialized."
+                )
+        elif float in types:
+            if isinstance(value, float):
+                return int(value)
+            else:
+                raise PrimitiveMismatchError(
+                    "Type does not match what would have been serialized."
+                )
+        elif str in types:
+            if isinstance(value, str):
+                return int(value)
+            else:
+                raise PrimitiveMismatchError(
+                    "Type does not match what would have been serialized."
+                )
+        else:
+            raise UnknownPrimitiveError(
+                "Primitive type cannot be converted to this native type."
+            )
 
 
 class FloatConverter(Converter):
@@ -82,5 +128,24 @@ class FloatConverter(Converter):
         else:
             raise UnserializableValueError("Could not convert int to a primitive.")
 
-    def __asnative__(self, cls, value, types):
-        raise NotImplementedError
+    def __asnative__(self, value: object, types: Set[type] = None) -> float:
+        if types is None:
+            return float(value)
+        elif float in types:
+            if isinstance(value, float):
+                return value
+            else:
+                raise PrimitiveMismatchError(
+                    "Type does not match what would have been serialized."
+                )
+        elif str in types:
+            if isinstance(value, str):
+                return float(value)
+            else:
+                raise PrimitiveMismatchError(
+                    "Type does not match what would have been serialized."
+                )
+        else:
+            raise UnknownPrimitiveError(
+                "Primitive type cannot be converted to this native type."
+            )
