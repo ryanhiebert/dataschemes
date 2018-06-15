@@ -16,7 +16,7 @@ def asprimitive(value: object, types: Set[type] = None) -> object:
     an optional argument. If the types are not specified, then it
     will make it whatever the type prefers.
     """
-    for type_, converter in converters(asprimitive=True).items():
+    for type_, converter in converters("asprimitive").items():
         if isinstance(value, type_):
             # In order to allow for single argument converters, only call
             # the converter with types if asprimitive was called with types.

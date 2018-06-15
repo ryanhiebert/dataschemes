@@ -2,9 +2,9 @@ from abc import ABCMeta, abstractmethod
 from typing import Set, TypeVar, Union
 
 
-def converters(*, asprimitive):
+def converters(method):
     return {
-        type_: Converter(asprimitive=asprimitive)
+        type_: getattr(Converter(), method)
         for type_, Converter in {
             str: StrConverter,
             int: IntConverter,
@@ -25,36 +25,26 @@ class UnknownPrimitiveError(TypeError):
     """Primitive type cannot be converted to this native type."""
 
 
-T = TypeVar("T")
-
-
 class Converter(metaclass=ABCMeta):
-    def __init__(self, *, asprimitive):
-        self.asprimitive = asprimitive
-
-    def __call__(self, *args, **kwargs):
-        method = self.__asprimitive__ if self.asprimitive else self.__asnative__
-        return method(*args, **kwargs)
-
     @abstractmethod
-    def __asprimitive__(self, value: object, types: Set[type] = None) -> object:
+    def asprimitive(self, value: object, types: Set[type] = None) -> object:
         raise NotImplementedError
 
     @abstractmethod
-    def __asnative__(self, cls: T, value: object, types: Set[type] = None) -> T:
+    def asnative(self, value: object, types: Set[type] = None) -> object:
         raise NotImplementedError
 
 
 class StrConverter(Converter):
     """Convert the str built-in type."""
 
-    def __asprimitive__(self, value: str, types: Set[type] = None) -> str:
+    def asprimitive(self, value: str, types: Set[type] = None) -> str:
         if types is None or str in types:
             return value
         else:
             raise UnserializableValueError(f"Could not convert str to a primitive.")
 
-    def __asnative__(self, value: object, types: Set[type] = None) -> str:
+    def asnative(self, value: object, types: Set[type] = None) -> str:
         if types is None:
             return str(value)
         elif str in types:
@@ -73,7 +63,7 @@ class StrConverter(Converter):
 class IntConverter(Converter):
     """Convert the int built-in type."""
 
-    def __asprimitive__(
+    def asprimitive(
         self, value: int, types: Set[type] = None
     ) -> Union[int, float, str]:
         if types is None or int in types:
@@ -85,7 +75,7 @@ class IntConverter(Converter):
         else:
             raise UnserializableValueError("Could not convert int to a primitive.")
 
-    def __asnative__(self, value: object, types: Set[type] = None) -> int:
+    def asnative(self, value: object, types: Set[type] = None) -> int:
         if types is None:
             return int(value)
         elif int in types:
@@ -118,9 +108,7 @@ class IntConverter(Converter):
 class FloatConverter(Converter):
     """Convert the float built-in type."""
 
-    def __asprimitive__(
-        self, value: float, types: Set[type] = None
-    ) -> Union[float, str]:
+    def asprimitive(self, value: float, types: Set[type] = None) -> Union[float, str]:
         if types is None or float in types:
             return value
         elif str in types:
@@ -128,7 +116,7 @@ class FloatConverter(Converter):
         else:
             raise UnserializableValueError("Could not convert int to a primitive.")
 
-    def __asnative__(self, value: object, types: Set[type] = None) -> float:
+    def asnative(self, value: object, types: Set[type] = None) -> float:
         if types is None:
             return float(value)
         elif float in types:

@@ -24,7 +24,7 @@ def asnative(cls: T, value: object, types: Set[type] = None) -> T:
     as a ``str``, even if it would convert correctly, because ``int``
     may not be sufficient to interpret all possible values.
     """
-    for type_, converter in converters(asprimitive=False).items():
+    for type_, converter in converters("asnative").items():
         if issubclass(cls, type_):
             # In order to allow for single argument converters, only call
             # the converter with types if asnative was called with types.
