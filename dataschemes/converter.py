@@ -36,14 +36,16 @@ class Converter(metaclass=ABCMeta):
 
 
 class AtomConverter(Converter):
-    """The common elements between atom converters."""
+    """A non-collection converter."""
 
     type: type
     options: Dict[type, Tuple[Callable[[object], object], Callable[[object], object]]]
 
+    def preferred(self):
+        return next(iter(self.options.items()))
+
     def asprimitive(self, value: object, types: Set[type] = None) -> object:
-        preferred = next(iter(self.options.items()))
-        _, (converter, _) = preferred
+        _, (converter, _) = self.preferred()
         if types is None:
             return converter(value)
 
@@ -51,91 +53,45 @@ class AtomConverter(Converter):
             if type_ in types:
                 return converter(value)
 
-        raise UnserializableValueError(f"Could not convert {self.type} to a primitive.")
+        raise UnserializableValueError(
+            f"Could not convert '{self.type}' to any of these types: {types}"
+        )
+
+    def asnative(self, value: object, types: Set[type] = None) -> object:
+        _, (_, converter) = self.preferred()
+        if types is None:
+            return converter(value)
+
+        for type_, (_, converter) in self.options.items():
+            if type_ in types:
+                if isinstance(value, type_):
+                    return converter(value)
+                raise PrimitiveMismatchError(
+                    f"'{self.type}' would have been converted to '{type_}', "
+                    f"but got a '{type(value)}' instead."
+                )
+
+        raise UnknownPrimitiveError(
+            f"No converter found to convert '{type(value)}' to '{self.type}'."
+        )
 
 
 class StrConverter(AtomConverter):
     """Convert the str built-in type."""
 
-    type: str
+    type = str
     options = {str: (str, str)}
-
-    def asnative(self, value: object, types: Set[type] = None) -> str:
-        if types is None:
-            return str(value)
-        elif str in types:
-            if isinstance(value, str):
-                return value
-            else:
-                raise PrimitiveMismatchError(
-                    "Type does not match what would have been serialized."
-                )
-        else:
-            raise UnknownPrimitiveError(
-                "Primitive type cannot be converted to this native type."
-            )
 
 
 class IntConverter(AtomConverter):
     """Convert the int built-in type."""
 
-    type: int
+    type = int
     options = {int: (int, int), float: (float, int), str: (str, int)}
-
-    def asnative(self, value: object, types: Set[type] = None) -> int:
-        if types is None:
-            return int(value)
-        elif int in types:
-            if isinstance(value, int):
-                return value
-            else:
-                raise PrimitiveMismatchError(
-                    "Type does not match what would have been serialized."
-                )
-        elif float in types:
-            if isinstance(value, float):
-                return int(value)
-            else:
-                raise PrimitiveMismatchError(
-                    "Type does not match what would have been serialized."
-                )
-        elif str in types:
-            if isinstance(value, str):
-                return int(value)
-            else:
-                raise PrimitiveMismatchError(
-                    "Type does not match what would have been serialized."
-                )
-        else:
-            raise UnknownPrimitiveError(
-                "Primitive type cannot be converted to this native type."
-            )
 
 
 class FloatConverter(AtomConverter):
     """Convert the float built-in type."""
 
-    type: float
-    options: {float: (float, float), str: (str, float)}
-
-    def asnative(self, value: object, types: Set[type] = None) -> float:
-        if types is None:
-            return float(value)
-        elif float in types:
-            if isinstance(value, float):
-                return value
-            else:
-                raise PrimitiveMismatchError(
-                    "Type does not match what would have been serialized."
-                )
-        elif str in types:
-            if isinstance(value, str):
-                return float(value)
-            else:
-                raise PrimitiveMismatchError(
-                    "Type does not match what would have been serialized."
-                )
-        else:
-            raise UnknownPrimitiveError(
-                "Primitive type cannot be converted to this native type."
-            )
+    type = float
+    options = {float: (float, float), str: (str, float)}
