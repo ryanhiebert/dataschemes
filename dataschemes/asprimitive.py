@@ -1,12 +1,13 @@
-from typing import Set
+from typing import Optional, Set
 from .converter import converters
+from .default import DEFAULT_CONVERTERS
 
 
 class UnrecognizedTypeError(TypeError):
     """The type of the value is unable to be serialized."""
 
 
-def asprimitive(value: object, types: Set[type] = None) -> object:
+def asprimitive(value: object, types: Optional[Set[type]] = None) -> object:
     """Convert a dataclass to primitive serializable types.
 
     Attempt to convert the given dataclass object into a primitive
@@ -16,13 +17,9 @@ def asprimitive(value: object, types: Set[type] = None) -> object:
     an optional argument. If the types are not specified, then it
     will make it whatever the type prefers.
     """
-    for type_, converter in converters("asprimitive").items():
+    for type_, converter in converters(
+        "asprimitive", DEFAULT_CONVERTERS, types
+    ).items():
         if isinstance(value, type_):
-            # In order to allow for single argument converters, only call
-            # the converter with types if asprimitive was called with types.
-            if types is None:
-                return converter(value)
-            else:
-                return converter(value, types)
-
+            return converter(value)
     raise UnrecognizedTypeError("Type cannot be converted to a primitive.")

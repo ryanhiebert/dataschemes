@@ -1,5 +1,6 @@
-from typing import Set, TypeVar
+from typing import Set, TypeVar, Optional
 from .converter import converters
+from .default import DEFAULT_CONVERTERS
 
 
 class NativeTypeError(TypeError):
@@ -9,7 +10,7 @@ class NativeTypeError(TypeError):
 T = TypeVar("T")
 
 
-def asnative(cls: T, value: object, types: Set[type] = None) -> T:
+def asnative(cls: T, value: object, types: Optional[Set[type]] = None) -> T:
     """Convert a primitive serializable class to a native type.
 
     The types given are to allow the native converter to notice if
@@ -24,13 +25,7 @@ def asnative(cls: T, value: object, types: Set[type] = None) -> T:
     as a ``str``, even if it would convert correctly, because ``int``
     may not be sufficient to interpret all possible values.
     """
-    for type_, converter in converters("asnative").items():
+    for type_, converter in converters("asnative", DEFAULT_CONVERTERS, types).items():
         if issubclass(cls, type_):
-            # In order to allow for single argument converters, only call
-            # the converter with types if asnative was called with types.
-            if types is None:
-                return converter(value)
-            else:
-                return converter(value, types)
-
+            return converter(value)
     raise NativeTypeError("Type is unable to be constructed from a serialized value.")
