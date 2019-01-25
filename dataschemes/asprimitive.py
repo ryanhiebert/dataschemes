@@ -1,10 +1,5 @@
 from typing import Optional, Set
-from .converter import converters
-from .default import DEFAULT_CONVERTERS
-
-
-class UnrecognizedTypeError(TypeError):
-    """The type of the value is unable to be serialized."""
+from .default import DefaultConverter
 
 
 def asprimitive(value: object, types: Optional[Set[type]] = None) -> object:
@@ -17,9 +12,4 @@ def asprimitive(value: object, types: Optional[Set[type]] = None) -> object:
     an optional argument. If the types are not specified, then it
     will make it whatever the type prefers.
     """
-    for type_, converter in converters(
-        "asprimitive", DEFAULT_CONVERTERS, types
-    ).items():
-        if isinstance(value, type_):
-            return converter(value)
-    raise UnrecognizedTypeError("Type cannot be converted to a primitive.")
+    return DefaultConverter(types=types).asprimitive(value)

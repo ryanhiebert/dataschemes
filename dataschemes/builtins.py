@@ -1,13 +1,25 @@
 from abc import ABC, abstractmethod
-from typing import Tuple, Callable, Dict, ClassVar
-from .converter import (
-    Converter,
-    UnserializableValueError,
-    PrimitiveMismatchError,
-    UnknownPrimitiveError,
-)
+from typing import Tuple, Callable, Dict, ClassVar, TypeVar, Type
+from dataclasses import dataclass
+from .converter import Converter
 
 
+class UnserializableValueError(ValueError):
+    """The primitive types are not able to serialize this value."""
+
+
+class PrimitiveMismatchError(TypeError):
+    """Type does not match what would have been serialized."""
+
+
+class UnknownPrimitiveError(TypeError):
+    """Primitive type cannot be converted to this native type."""
+
+
+T = TypeVar("T")
+
+
+@dataclass
 class AtomConverter(Converter):
     """A non-collection converter."""
 
@@ -32,7 +44,7 @@ class AtomConverter(Converter):
             f"Could not convert '{self.type}' to any of these types: {self.types}"
         )
 
-    def asnative(self, value: object) -> object:
+    def asnative(self, cls: Type[T], value: object) -> T:
         _, (_, converter) = self.preferred()
         if self.types is None:
             return converter(value)
