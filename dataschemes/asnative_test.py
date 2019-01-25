@@ -53,6 +53,23 @@ def test_float():
         asnative(float, 42.0, {dict})
 
 
+def test_bool():
+    """``bool`` comes from ``bool`` or ``int``."""
+    assert asnative(bool, True) is True
+    assert isinstance(asnative(bool, True), bool)
+    assert asnative(bool, False, {bool, int}) is False
+    assert isinstance(asnative(bool, True, {bool, int}), bool)
+    with pytest.raises(PrimitiveMismatchError):
+        asnative(bool, 1, {bool, int})
+    assert asnative(bool, 42, {int}) is True
+    assert asnative(bool, 0, {int}) is False
+    assert isinstance(asnative(bool, 0, {int}), bool)
+    with pytest.raises(PrimitiveMismatchError):
+        asnative(bool, 1.7, {int})
+    with pytest.raises(UnknownPrimitiveError):
+        asnative(bool, 1.2, {str})
+
+
 def test_unknown():
     """Unknown types cannot be constructed."""
     with pytest.raises(NativeTypeError):

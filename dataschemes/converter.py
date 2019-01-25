@@ -1,4 +1,4 @@
-from abc import ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
 from typing import Set, TypeVar, Union, Tuple, Callable, Dict
 
 
@@ -6,6 +6,7 @@ def converters(method):
     return {
         type_: getattr(Converter(), method)
         for type_, Converter in {
+            bool: BoolConverter,
             str: StrConverter,
             int: IntConverter,
             float: FloatConverter,
@@ -25,7 +26,7 @@ class UnknownPrimitiveError(TypeError):
     """Primitive type cannot be converted to this native type."""
 
 
-class Converter(metaclass=ABCMeta):
+class Converter(ABC):
     @abstractmethod
     def asprimitive(self, value: object, types: Set[type] = None) -> object:
         raise NotImplementedError
@@ -95,3 +96,10 @@ class FloatConverter(AtomConverter):
 
     type = float
     options = {float: (float, float), str: (str, float)}
+
+
+class BoolConverter(AtomConverter):
+    """Convert the bool built-in type."""
+
+    type = bool
+    options = {bool: (bool, bool), int: (int, bool)}

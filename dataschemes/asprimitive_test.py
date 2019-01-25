@@ -40,6 +40,18 @@ def test_float():
         asprimitive(42.0, {dict})
 
 
+def test_bool():
+    """``bool`` goes to ``bool`` or ``int``."""
+    assert asprimitive(True) is True
+    assert isinstance(asprimitive(True), bool)
+    assert asprimitive(False, {bool, int}) is False
+    assert isinstance(asprimitive(False, {bool, int}), bool)
+    assert asprimitive(True, {int}) == 1
+    assert isinstance(asprimitive(True, {int}), int)
+    with pytest.raises(UnserializableValueError):
+        asprimitive(True, {str})
+
+
 def test_unknown():
     """Unknown types cannot be constructed."""
     with pytest.raises(UnrecognizedTypeError):
